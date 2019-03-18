@@ -162,16 +162,16 @@ pair<int, int> getStartEndID(unordered_map<int, Point> coordTable, Point startP,
 		// calculate its distance from the start and end points
 		long long distS = manhattan(startP, point.second);
 		long long distE = manhattan(endP, point.second);
-		
+
 		// add each distance to the appropriate vector along with the point ID
 		distFromStart.push_back(make_pair(distS,ID));
 		distFromEnd.push_back(make_pair(distE,ID));
 	}
-	
+
 	// sort each list by the first item in the pair (distance)
 	sort(distFromStart.begin(),distFromStart.end());
 	sort(distFromEnd.begin(),distFromEnd.end());
-	
+
 	// get the closest point to the requested start and end points
 	int startID = distFromStart[0].second;
 	int endID = distFromEnd[0].second;
@@ -192,7 +192,7 @@ stack<int> getReversePath ( WDigraph& graph, int startID, int endID){
 	// *******************************
 	// Find the shorstest path from start to end points
 	// *******************************
-	
+
 	// find the shortest path from the start point to any accesible point
 	// eliminate unnecesary edges from the graph
 	// use an unorderd map to store the new edge tree
@@ -222,51 +222,64 @@ stack<int> getReversePath ( WDigraph& graph, int startID, int endID){
 	return reversePath;
 }
 
-void printPath( unordered_map<int, Point> coordTable, stack<int> reversePath, ifstream &ifs, SerialPort ioSerial){
+void printPath( unordered_map<int, Point> coordTable, stack<int> reversePath, SerialPort &ios){
 	// *******************************
 	// Write the path in reversePath stack to the output file
 	// *******************************
 	// write the number of waypoints in the path
 	
-	Serial.writeline("N ");
-	Serial.writeline(reversePath.size());
-	Serial.writeline("\n");
+
+	ios.writeline("N ");
+	ios.writeline(to_string(reversePath.size()));
+	ios.writeline("\n");
 	
+	string line;
+	line = ios.readline();
+	cout << line;
 	// print the point lat and lon for each waypoint in the stack
 	// start point to end point
 	//
-	
+
 	string inputline; // where line will be stored
 	while (!reversePath.empty()) { 
 		int ID = reversePath.top();
 		Point current = coordTable.at(ID);
-		ofs << "W " << current.lat << " " << current.lon << endl;
-		reversePath.pop();
 
+		ios.writeline("W "); 
+		ios.writeline(to_string(current.lat));
+		ios.writeline(" ");
+		ios.writeline(to_string(current.lon));
+		ios.writeline("\n");
+
+		line = ios.readline();
+		cout << line;
+
+		reversePath.pop();
 		// wait for the acknolegment before proceeding
 		while (inputline != "A"){
 			getline(ifs, inputline);
 		}
 	}
-	ofs << "E\n"; 
+	ios.writeline("E\n"); 
+	
+	line = ios.readline();
+	cout << line;
 }
 
 int main(int argc, char* argv[]){
 	// *******************************
 	// Read server input, Set up the server 
 	// *******************************
-	
+
 	// Make sure there are wnough arguments
-	if (argc > 3){
+	if (argc > 2){
 		cout << "Warning: Excess arguments, remaining Arguments will be ignored.\n";
-	} else if ( argc < 3){
+	} else if ( argc < 2){
 		cout << "Error: Insufficient arguments! Please read REAME\n"; return -1;
 	}
 
 	// get the input command filename
 	char* inputCFile = argv[1];
-	// get the output filename
-	char* outputFile = argv[2];
 
 	// get the graph of the city
 	WDigraph graph;
@@ -277,7 +290,7 @@ int main(int argc, char* argv[]){
 	ifstream ifs;
 	ifs.open (inputCFile);
 
-	
+
 	// get the start and end points from the client
 	pair<Point, Point> request; 
 	try {
@@ -299,11 +312,10 @@ int main(int argc, char* argv[]){
 	stack <int> reversePath = getReversePath(graph, startID, endID);
 
 	// open the output file for writting
-	
-  	SerialPort Serial("/dev/ttyACM0");
+
+	SerialPort Serial("/dev/ttyACM0");
 	printPath( coordTable, reversePath, ifs, Serial);
-	
-	ofs.close();
+
 	return 0;
 }
 

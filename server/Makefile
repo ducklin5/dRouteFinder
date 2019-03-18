@@ -12,7 +12,7 @@ EXE = server heapDBG dijkstraDBG
 #--Targets------------------------------------------
 # server: CXXFLAGS += -D DEBUG
 server: $(objects)
-	$(CXX) $(CXXFLAGS) obj/heap.o obj/dijkstra.o obj/server.o -o $@ 
+	$(CXX) $(CXXFLAGS) obj/heap.o obj/dijkstra.o obj/server.o obj/serialport.o -o $@ 
 
 
 heapDBG: CXXFLAGS += -D HEAP_DBG -D DEBUG
