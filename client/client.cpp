@@ -239,6 +239,7 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 	splitStr(buffer, tokens, 4, " "); 
 	// verify input is expected
 	if(!verify(tokens[0], "E")){return;}
+	status_message("GOT WAYPOINTS");
 }
 
 void draw_route(){
@@ -257,7 +258,7 @@ void draw_route(){
 		int By = B_Y - shared.map_coords.y; 
 		
 		xy_pos crsr = get_cursor_screen();
-		shared.tft -> drawLine(crsr.x, crsr.y, crsr.x + 20, crsr.y + 20, 0x001F);
+		shared.tft -> drawLine(Ax, Ay, Bx, By, 0x001F);
 	}
 }
 
@@ -317,7 +318,7 @@ int main() {
 
 				// TODO: communicate with the server to get the waypoints
 				getRoute(start, end);
-				draw_route();
+				shared.redraw_map = 1;
 				// now we have stored the path length in
 				// shared.num_waypoints and the waypoints themselves in
 				// the shared.waypoints[] array, switch back to asking for the
