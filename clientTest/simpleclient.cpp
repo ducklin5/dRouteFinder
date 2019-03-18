@@ -24,9 +24,7 @@ void setup() {
   // 115200 can be used with Python, but not with serial-mon
   Serial.begin(9600);
 
-  Serial.println("PHASE01");
-  Serial.println("Client side is waiting for input.");
-  Serial.println("PHASE02");
+  Serial.println("start");
 
   // set up buffer as empty string
   buf_len = 0;

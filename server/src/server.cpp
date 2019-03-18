@@ -111,7 +111,7 @@ void printTree (unordered_map<int,PLI>& tree){
 }
 #endif
 
-pair<Point, Point> getRequest( ifstream &ifs){
+pair<Point, Point> wait4Request( SerialPort &inSerial){
 	// *********************
 	// Wait for command input then get start and end points
 	// *********************
@@ -119,13 +119,12 @@ pair<Point, Point> getRequest( ifstream &ifs){
 	string inputline; // where line will be stored
 	string lineData[6]; // where line substring will be stored
 
+	cout << "Waiting for request \n";
 	// wait for input from the file/ arduino
 	do {
 		// get a line and check for eof
-		if(!getline(ifs, inputline)){
-			throw -1;
-			return request;
-		}
+		inputline = inSerial.readline();
+		cout << inputline;
 		// split the line into substrings
 		// split each line by the " " deliminator and save each sub string
 		string token;
@@ -136,13 +135,15 @@ pair<Point, Point> getRequest( ifstream &ifs){
 			x++;
 		}
 		// reapeat till the first R command is found 
-	} while (lineData[0] != "R"); 
+	} while (lineData[0] != "R");
 
 	// get the start and end point of the requested path
 	Point startP = { stoll(lineData[1]), stoll(lineData[2])};
 	Point endP = { stoll(lineData[3]), stoll(lineData[4])};
 
 	request = {startP, endP};
+
+	cout << "recieved request \n";
 	return request;
 }
 
@@ -222,25 +223,37 @@ stack<int> getReversePath ( WDigraph& graph, int startID, int endID){
 	return reversePath;
 }
 
+bool isAck( string line ){
+	if(line == ""){
+		cout << "Timeout! No acknolegment\n";
+		return false;
+	} else if (line != "A\n"){
+		cout << "Expected: A\t got: " << line << "\n";
+		return false;
+	}
+	return true;
+}
+
 void printPath( unordered_map<int, Point> coordTable, stack<int> reversePath, SerialPort &ios){
 	// *******************************
 	// Write the path in reversePath stack to the output file
 	// *******************************
 	// write the number of waypoints in the path
-	
-
 	ios.writeline("N ");
 	ios.writeline(to_string(reversePath.size()));
 	ios.writeline("\n");
-	
-	string line;
-	line = ios.readline();
-	cout << line;
-	// print the point lat and lon for each waypoint in the stack
-	// start point to end point
-	//
 
-	string inputline; // where line will be stored
+	cout << "Sent:" << "N " << reversePath.size() << "\n";
+
+	string line; // where line will be stored
+	line = ios.readline(1000);
+	if(!isAck(line)){return;}
+
+	cout << "Path Ack recieved\n";
+
+	// print the point lat and lon for each waypoint in the stack
+	// start point to end point/
+	int i = 0;
 	while (!reversePath.empty()) { 
 		int ID = reversePath.top();
 		Point current = coordTable.at(ID);
@@ -250,20 +263,18 @@ void printPath( unordered_map<int, Point> coordTable, stack<int> reversePath, Se
 		ios.writeline(" ");
 		ios.writeline(to_string(current.lon));
 		ios.writeline("\n");
+		cout << "Waypoint " << i << " sent \n";
 
-		line = ios.readline();
-		cout << line;
+		// wait for the acknolegment before proceeding
+		line = ios.readline(1000);
+		if(!isAck(line)){return;}
+		cout << "Waypoint " << i++ << " Ack recieved \n";
 
 		reversePath.pop();
-		// wait for the acknolegment before proceeding
-		while (inputline != "A"){
-			getline(ifs, inputline);
-		}
 	}
 	ios.writeline("E\n"); 
-	
-	line = ios.readline();
-	cout << line;
+	cout << "End signal sent\n";
+	cout << "---------------\n";
 }
 
 int main(int argc, char* argv[]){
@@ -271,15 +282,11 @@ int main(int argc, char* argv[]){
 	// Read server input, Set up the server 
 	// *******************************
 
-	// Make sure there are wnough arguments
-	if (argc > 2){
+	// Make sure there are enough arguments
+	if (argc > 1){
 		cout << "Warning: Excess arguments, remaining Arguments will be ignored.\n";
-	} else if ( argc < 2){
-		cout << "Error: Insufficient arguments! Please read REAME\n"; return -1;
 	}
 
-	// get the input command filename
-	char* inputCFile = argv[1];
 
 	// get the graph of the city
 	WDigraph graph;
@@ -287,35 +294,30 @@ int main(int argc, char* argv[]){
 	readGraph("edmonton-roads-2.0.1.txt", graph, coordTable);
 
 	// open the input command file for reading
-	ifstream ifs;
-	ifs.open (inputCFile);
-
-
-	// get the start and end points from the client
-	pair<Point, Point> request; 
-	try {
-		request = getRequest(ifs);
-	} catch (int error) {
-		cout << "No R command in file before end of file, or file could not be read!\n";
-		return error;
-	}
-	Point startP = request.first;
-	Point endP = request.second;
-
-	// get the corresponding IDs
-	pair<int, int> ids = getStartEndID(coordTable, startP, endP);
-
-	int startID = ids.first;
-	int endID = ids.second;
-
-	// get the path from the IDs
-	stack <int> reversePath = getReversePath(graph, startID, endID);
-
-	// open the output file for writting
-
 	SerialPort Serial("/dev/ttyACM0");
-	printPath( coordTable, reversePath, ifs, Serial);
 
+	bool running = true;
+	while(running){
+		// get the start and end points from the client
+		pair<Point, Point> request; 
+		request = wait4Request(Serial);
+
+		Point startP = request.first;
+		Point endP = request.second;
+
+		// get the corresponding IDs
+		pair<int, int> ids = getStartEndID(coordTable, startP, endP);
+
+		int startID = ids.first;
+		int endID = ids.second;
+
+		// get the path from the IDs
+		stack <int> reversePath = getReversePath(graph, startID, endID);
+
+
+		printPath( coordTable, reversePath, Serial);
+
+	}
 	return 0;
 }
 
