@@ -182,7 +182,7 @@ bool verify(const char* input, const char* expected){
 	return true;
 }
 
-void getRoute(lon_lat_32 start, lon_lat_32 end){
+bool getRoute(lon_lat_32 start, lon_lat_32 end){
 	/***************
 	 * Populates the shared.waypoints with a path from
 	 * start to end by communicating with the server
@@ -210,7 +210,7 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 	if(!wait4line(10000)){
 		// if wait4line doesnt catch a line in 10000 ms, then timeout
 		status_message("Path Timeout!");
-		return;
+		return false;
 	}
 
 	// split the line into 4 using " " deliminator
@@ -218,13 +218,24 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 	splitStr(buffer, tokens, 4, " ");
 
 	// verify input is expected
-	if(!verify(tokens[0], "N")){return;} 
+	if(!verify(tokens[0], "N")){return false;} 
 
 	// verify the recieved waypoint count
 	int32_t wpCount = atoi(tokens[1]);
 	if(wpCount > max_waypoints){
 		status_message("Way too many waypoints");
-		return;
+		return false;
+	}
+	
+	// if there is no path terminate
+	if(wpCount == 0){
+		status_message("No path found");
+		return false;
+	}
+
+	if(wpCount == 1){
+		status_message("Path to same point");
+		return false;
 	}
 
 	// save it and aknowlodge
@@ -236,13 +247,13 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 	for(int i=0; i<wpCount; i++){
 		if(!wait4line(1000)){
 			status_message("Waypoint Timeout!");
-			return;
+			return false;
 		}
 		
 		splitStr(buffer, tokens, 4, " ");
 
 		// verify input is expected
-		if(!verify(tokens[0], "W")){return;} 
+		if(!verify(tokens[0], "W")){return false;} 
 
 		char* lat = tokens[1];
 		char* lon = tokens[2];
@@ -255,13 +266,14 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 		// if wait4line doesnt catch a line in 10000 ms 
 		// then timeout
 		status_message("E signal Timeout!");
-		return;
+		return false;
 	}
 
 	splitStr(buffer, tokens, 4, " "); 
 	// verify input is expected
-	if(!verify(tokens[0], "E")){return;}
+	if(!verify(tokens[0], "E")){return false;}
 	status_message("GOT WAYPOINTS");
+	return true;
 }
 
 void draw_route(){
@@ -348,13 +360,18 @@ int main() {
 				end = get_cursor_lonlat();
 
 				// TODO: communicate with the server to get the waypoints
-				getRoute(start, end);
+				if(getRoute(start, end)){
+					shared.redraw_map = 1;
+				} else {
+					// if there was an error, leave the error message for 3 seconds
+					delay(3000);
+					status_message("FROM?");
+				}
 				
 				// now we have stored the path length in
 				// shared.num_waypoints and the waypoints themselves in
 				// the shared.waypoints[] array, switch back to asking for the
 				// start point of a new request
-				shared.redraw_map = 1;
 				curr_mode = WAIT_FOR_START;
 				// wait until the joystick button is no longer pushed
 				while (digitalRead(clientpins::joy_button_pin) == LOW) {}
