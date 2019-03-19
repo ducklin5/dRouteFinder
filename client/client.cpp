@@ -205,7 +205,7 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 		return;
 	}
 
-	// save it and aknowlodge
+	// save it and acknowledge
 	shared.num_waypoints = wpCount;
 	Serial.println("A");
 
@@ -213,7 +213,7 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 	status_message("Getting waypoints...");
 	for(int i=0; i<wpCount; i++){
 		if(!wait4line(1000)){
-			status_message("Waypozoint Timeout!");
+			status_message("Waypoint Timeout!");
 			return;
 		}
 

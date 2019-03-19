@@ -1,0 +1,99 @@
+ ---------------------------------------------------
+  Name: Adekunle Toluwani & Azeez  Abass
+  ID's: 1538562 & 1542780
+  CMPUT 275 EB1, Winter 2019
+  Assignment 2: Driving Route Finder (Part 2)
+---------------------------------------------------
+
+Included Files :
+	├── client
+		├── consts_and_types.h
+		├── lcd_image.h
+		├── map_drawing.h
+		├── circuit-wiring.txt
+		├── instructions.txt
+		├── Makefile
+		├── lcd_image.cpp
+		├──	map_drawing.cpp
+		└── client.cpp
+	├── README
+	└── server
+		├── digraph.cpp
+		├── digraph.h
+		├── dijkstra.cpp
+		├── dijkstra.h
+		├── heap.cpp
+		├── heap.h
+		├── server.cpp
+		└── wdigraph.h
+2 directories, 18 files
+
+consts_and_types.h
+	* contains and declares all the constant variables and types that are used throughout the entirety of the code
+
+lcd_image.h and lcd_image.cpp
+	* Allows you to draw patches of .lcd images on the display.   
+
+map_drawing.h and map_drawing.cpp
+	* Functions to draw the map and manipulate the coordinates for the map/cursor
+   view.
+
+circuit-wiring.txt
+	* Wiring instructions for the Arduino, Joystick and two buttons
+
+Makefile
+	* Standard Arduino Makefile
+
+edmonton-roads-2.0.1.txt
+	* contains all the edmonton road data
+
+diagraph.h contains definition of 1 class:
+	* Digraph class along with its properties and methods
+
+diagraph.cpp contains:
+	* implementation of digraph class methods
+
+wdigraph.h contains 1 class:
+	* WDigraph : Digraph extention class for weighted Digraphs
+
+dijkastra.h contains dijkastra function definition
+
+dijkastra.cpp contains dijkastra function implementation
+
+heap.h and heap.cpp contain definition and implementation of the heap class
+
+server.cpp contains the main server function
+
+Makefile Targets :
+	> SERVER
+	* make ( server ): Builds the server an all the dependent object files
+	
+	> Objects (./obj/)
+	* make heap.o
+	* make dijkastra.o
+	* make digraph.o
+	* make server.o 
+
+	> Misc
+	* make clean: Delets object files and executables
+	* make debug: cleans the project and buidls a debug version of the project
+
+-- Wiring Instructions --
+See circuit-wiring.txt for details on how the Arduino board, Adafruit TFT Display,
+Joystick and Zoom in & out buttons are to be wired
+
+-- Program Usage --
+Usage:
+	In one terminal run the following command while in the client directory:
+		Make upload to upload the entire project to the arduino board
+		
+
+	In another terminal run these commands while in the server directory:
+		make    # to build the entire project
+		./server inputCommand.txt output.txt # to run server
+
+	Then, use the joystick to navigate the map and press down on the joystick button to select
+	a location for the beginning coordinates of the route and then press down on the joystick button again
+	at another location to select the the end coordinates of the route. It should say "Reeceiving Waypoint"
+	green bar in the bottom of the screen and after a few seconds a path should be highlighted in blue,
+	if there is one, and if none exists, it should say "NO PATH"

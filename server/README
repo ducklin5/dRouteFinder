@@ -1,0 +1,61 @@
+ ---------------------------------------------------
+    Name: Adekunle Toluwani & Azeez  Abass
+  ID's: 1538562 & 1542780
+   CMPUT 275 EB1, Winter 2019
+   Assignment 2: Driving Route Finder (Part 1)
+---------------------------------------------------
+
+Included Files :
+	├── edmonton-roads-2.0.1.txt
+	├── Makefile
+	├── README
+	└── src
+		├── digraph.cpp
+		├── digraph.h
+		├── dijkstra.cpp
+		├── dijkstra.h
+		├── heap.cpp
+		├── heap.h
+		├── server.cpp
+		└── wdigraph.h
+1 directory, 11 files
+
+edmonton-roads-2.0.1.txt
+	* contains all the edmonton road data
+
+diagraph.h contains definition of 1 class:
+	* Digraph class along with its properties and methods
+
+diagraph.cpp contains:
+	* implementation of digraph class methods
+
+wdigraph.h contains 1 class:
+	* WDigraph : Digraph extention class for weighted Digraphs
+
+dijkastra.h contains dijkastra function definition
+
+dijkastra.cpp contains dijkastra function implementation
+
+heap.h and heap.cpp contain definition and implementation of the heap class
+
+server.cpp contains the main server function
+
+Makefile Targets :
+	> SERVER
+	* make ( server ): Builds the server an all the dependent object files
+	
+	> Objects (./obj/)
+	* make heap.o
+	* make dijkastra.o
+	* make digraph.o
+	* make server.o 
+
+	> Misc
+	* make clean: Delets object files and executables
+	* make debug: cleans the project and buidls a debug version of the project
+
+-- Program Usgae --
+Usage:
+	Run these commands while in the root directory of this project:
+		make    # to build the entire project
+		./server inputCommand.txt output.txt # to run server
