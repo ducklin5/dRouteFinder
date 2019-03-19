@@ -6,26 +6,41 @@
 ---------------------------------------------------
 
 Included Files :
-	├── client
-		├── consts_and_types.h
-		├── lcd_image.h
-		├── map_drawing.h
-		├── circuit-wiring.txt
-		├── Makefile
-		├── lcd_image.cpp
-		├──	map_drawing.cpp
-		└── client.cpp
-	├── README
-	└── server
-		├── digraph.cpp
-		├── digraph.h
-		├── dijkstra.cpp
-		├── dijkstra.h
-		├── heap.cpp
-		├── heap.h
-		├── server.cpp
-		└── wdigraph.h
-2 directories, 16 files
+├── client
+│   ├── Makefile
+│   ├── circuit-wiring.txt
+│   ├── client.cpp
+│   ├── consts_and_types.h
+│   ├── lcd_image.cpp
+│   ├── lcd_image.h
+│   ├── map_drawing.cpp
+│   └── map_drawing.h
+├── server
+│   ├── src
+│   │   ├── digraph.cpp
+│   │   ├── digraph.h
+│   │   ├── dijkstra.cpp
+│   │   ├── dijkstra.h
+│   │   ├── heap.cpp
+│   │   ├── heap.h
+│   │   ├── serialport.cpp
+│   │   ├── serialport.h
+│   │   ├── server.cpp
+│   │   └── wdigraph.h
+│   ├── tests
+│   │   ├── test00-input.txt
+│   │   ├── test00-output.txt
+│   │   ├── test01-input.txt
+│   │   └── test01-output.txt
+│   ├── Makefile
+│   ├── README
+│   ├── edmonton-roads-2.0.1.txt
+│   ├── test00-out.txt
+│   └── test01-out.txt
+└── README
+
+4 directories, 28 files
+
 
 consts_and_types.h
 	* contains and declares all the constant variables and types that are used throughout the entirety of the code
