@@ -101,19 +101,25 @@ void process_input() {
 }
 
 bool wait4line(unsigned long dur){
+	/*******************
+	 * wait for time dur (in millisecond)for a new line to reach the serial
+	 * return whether a line was recieved or not
+	 ******************/
 	// clear the buffer
 	buf_len = 0;
 	buffer[buf_len] = 0;
 
+	// start the timer
 	unsigned long start = millis();
 	unsigned long now = start;
 	do {
+		// read from the serial
 		char in_char;
 		if (Serial.available()) {
 			// read the incoming byte:
 			in_char = Serial.read();
 
-			// if end of line is received, waiting for line is done:
+			// if end of line is received, waiting4line is done:
 			if (in_char == '\n' || in_char == '\r') {
 				// now we process the buffer
 				return true;
@@ -130,12 +136,20 @@ bool wait4line(unsigned long dur){
 		}
 		now = millis();
 	} while (now-start < dur);
+	
+	// if we reached here then a line was not recieved
 	return false;
 }
 
 void splitStr(char* &input, char** output, int tCount, const char* delim){
+	/*******************
+	 * split input into tokens in output array
+	 * fill up output array with the last token
+	 * if there are more spaces than tokens
+	 ******************/
 	int i=0;
 	char* p;
+	// loop through tokens
 	for (p = strtok(buffer,delim); p != NULL and i < tCount; p = strtok(NULL, delim)) {
 		output[i] = p;
 		i++;
@@ -149,6 +163,10 @@ void splitStr(char* &input, char** output, int tCount, const char* delim){
 }
 
 bool verify(const char* input, const char* expected){
+	/***************
+	 * Compare input to expected
+	 * update status_message if they differ
+	 ***************/
 	// check if we get expected input
 	if(strcmp(input, expected) != 0){
 		char msg[30];
@@ -165,6 +183,11 @@ bool verify(const char* input, const char* expected){
 }
 
 void getRoute(lon_lat_32 start, lon_lat_32 end){
+	/***************
+	 * Populates the shared.waypoints with a path from
+	 * start to end by communicating with the server
+	 ***************/
+	
 	// clear out the Serial first
 	char t;
 	while(Serial.available()){
@@ -193,13 +216,12 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 	// split the line into 4 using " " deliminator
 	char* tokens[4];
 	splitStr(buffer, tokens, 4, " ");
-	int32_t wpCount;
 
 	// verify input is expected
 	if(!verify(tokens[0], "N")){return;} 
 
 	// verify the recieved waypoint count
-	wpCount = atoi(tokens[1]);
+	int32_t wpCount = atoi(tokens[1]);
 	if(wpCount > max_waypoints){
 		status_message("Way too many waypoints");
 		return;
@@ -213,10 +235,10 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 	status_message("Getting waypoints...");
 	for(int i=0; i<wpCount; i++){
 		if(!wait4line(1000)){
-			status_message("Waypozoint Timeout!");
+			status_message("Waypoint Timeout!");
 			return;
 		}
-
+		
 		splitStr(buffer, tokens, 4, " ");
 
 		// verify input is expected
@@ -230,8 +252,8 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 	}
 
 	if(!wait4line(10000)){
-		// if wait4line doesnt catch a line in 10000 ms, the timeout
-		// reset the state
+		// if wait4line doesnt catch a line in 10000 ms 
+		// then timeout
 		status_message("E signal Timeout!");
 		return;
 	}
@@ -243,21 +265,30 @@ void getRoute(lon_lat_32 start, lon_lat_32 end){
 }
 
 void draw_route(){
+	/***************
+	 * draw the route from start to end point on
+	 * the tft arduino screen
+	 ***************/
 	for(int i = 0; i < shared.num_waypoints - 1; i++){
+		// draw a line between each waypoint
+		// get current waypoint
 		lon_lat_32 A = shared.waypoints[i];
+		// get next waypoint
 		lon_lat_32 B = shared.waypoints[i+1];
 
+		// calculate they positions on the global map
 		int A_X = longitude_to_x(shared.map_number, A.lon); 
 		int A_Y = latitude_to_y(shared.map_number, A.lat); 
 		int B_X = longitude_to_x(shared.map_number, B.lon); 
 		int B_Y = latitude_to_y(shared.map_number, B.lat);
 		
-		int Ax = A_X - shared.map_coords.x; 
-		int Ay = A_Y - shared.map_coords.y; 
-		int Bx = B_X - shared.map_coords.x; 
-		int By = B_Y - shared.map_coords.y; 
+		// calculate their positions on the screen
+		int Ax = A_X - shared.map_coords.x;
+		int Ay = A_Y - shared.map_coords.y;
+		int Bx = B_X - shared.map_coords.x;
+		int By = B_Y - shared.map_coords.y;
 		
-		xy_pos crsr = get_cursor_screen();
+		// draw a blue line between them
 		shared.tft -> drawLine(Ax, Ay, Bx, By, 0x001F);
 	}
 }
@@ -318,12 +349,12 @@ int main() {
 
 				// TODO: communicate with the server to get the waypoints
 				getRoute(start, end);
-				shared.redraw_map = 1;
+				
 				// now we have stored the path length in
 				// shared.num_waypoints and the waypoints themselves in
 				// the shared.waypoints[] array, switch back to asking for the
 				// start point of a new request
-				//shared.redraw_map = 1;
+				shared.redraw_map = 1;
 				curr_mode = WAIT_FOR_START;
 				// wait until the joystick button is no longer pushed
 				while (digitalRead(clientpins::joy_button_pin) == LOW) {}
