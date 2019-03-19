@@ -238,7 +238,7 @@ bool getRoute(lon_lat_32 start, lon_lat_32 end){
 		return false;
 	}
 
-	// save it and aknowlodge
+	// save it and acknowledge
 	shared.num_waypoints = wpCount;
 	Serial.println("A");
 
